@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Our Services | Puneeth Vehicle Services{% endblock %}
+
+{% block content %}
+<!-- Page Header Banner -->
+<div class="py-5 bg-navy text-white position-relative" style="background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%); border-bottom: 3px solid var(--accent-orange);">
+    <div class="container py-3">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb small mb-2">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-orange text-decoration-none">Home</a></li>
+                        <li class="breadcrumb-item active text-light" aria-current="page">Our Services</li>
+                    </ol>
+                </nav>
+                <h1 class="display-5 fw-bold text-white mb-2">Comprehensive <span class="text-orange">Vehicle Services</span></h1>
+                <p class="text-light opacity-75 lead mb-0">
+                    From routine maintenance to intricate electronic diagnostics, explore our factory-grade automotive care solutions.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                {% if current_user and current_user.role == 'customer' %}
+                    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-orange btn-lg">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Book Service Appointment
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-orange btn-lg">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Book a Service
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Services Section -->
+<section class="py-5" style="background-color: #F8FAFC;">
+    <div class="container py-4">
+        <div class="section-title-wrap">
+            <span class="section-subtitle">Factory-Standard Automobile Solutions</span>
+            <h2 class="section-title">Specialized Maintenance & Precision Repairs</h2>
+            <p class="text-secondary max-w-600 mx-auto">
+                Every service at Puneeth Vehicle Services is performed by ASE certified technicians utilizing genuine OEM components and calibrated digital diagnostic scanners.
+            </p>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <!-- Service 1 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card shadow-sm h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-wrap mb-0">
+                            <i class="fa-solid fa-oil-can"></i>
+                        </div>
+                        <span class="badge bg-light text-navy fw-bold border px-3 py-2">From ₹2,499</span>
+                    </div>
+                    <h4>Periodic Maintenance Service</h4>
+                    <p class="text-secondary">Complete 40-point vehicle wellness check, premium synthetic engine oil replacement, oil filter, air filter cleaning, fluid top-ups, and spark plug inspection.</p>
+                    <ul class="list-unstyled small text-secondary my-3 d-flex flex-column gap-2">
+                        <li><i class="fa-solid fa-check text-success me-2"></i>OEM Synthetic 5W-30 / 0W-20 Oil</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>40-Point Electronic Safety Inspection</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Complimentary Exterior Wash & Vacuum</li>
+                    </ul>
+                    <div class="card-footer-action mt-auto">
+                        <span class="text-muted small"><i class="fa-solid fa-clock me-1 text-orange"></i> 3-4 Hours</span>
+                        {% if current_user and current_user.role == 'customer' %}
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 2 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card shadow-sm h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-wrap mb-0">
+                            <i class="fa-solid fa-compact-disc"></i>
+                        </div>
+                        <span class="badge bg-light text-navy fw-bold border px-3 py-2">From ₹1,299</span>
+                    </div>
+                    <h4>Brake System Overhaul</h4>
+                    <p class="text-secondary">High-friction ceramic or semi-metallic brake pad replacement, disc rotor skimming, caliper lubrication, ABS electronic sensor test, and hydraulic fluid bleed.</p>
+                    <ul class="list-unstyled small text-secondary my-3 d-flex flex-column gap-2">
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Bosch / Brembo OEM Friction Pads</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Disc Rotor Truing & Caliper Polish</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>DOT 4 High-Boiling Fluid Replacement</li>
+                    </ul>
+                    <div class="card-footer-action mt-auto">
+                        <span class="text-muted small"><i class="fa-solid fa-clock me-1 text-orange"></i> 2 Hours</span>
+                        {% if current_user and current_user.role == 'customer' %}
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 3 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card shadow-sm h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-wrap mb-0">
+                            <i class="fa-solid fa-microchip"></i>
+                        </div>
+                        <span class="badge bg-light text-navy fw-bold border px-3 py-2">From ₹999</span>
+                    </div>
+                    <h4>ECU Computer Diagnostics</h4>
+                    <p class="text-secondary">Advanced German OBD-II scan tool diagnosis. Read active and stored DTC fault codes, analyze real-time oxygen, fuel rail, and sensor outputs, and reset check lights.</p>
+                    <ul class="list-unstyled small text-secondary my-3 d-flex flex-column gap-2">
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Full System ECU/ECM/TCM Diagnostic Scan</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Live Sensor Telemetry Analysis</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Digital Health Report Provided</li>
+                    </ul>
+                    <div class="card-footer-action mt-auto">
+                        <span class="text-muted small"><i class="fa-solid fa-clock me-1 text-orange"></i> 1 Hour</span>
+                        {% if current_user and current_user.role == 'customer' %}
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 4 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card shadow-sm h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-wrap mb-0">
+                            <i class="fa-solid fa-snowflake"></i>
+                        </div>
+                        <span class="badge bg-light text-navy fw-bold border px-3 py-2">From ₹1,899</span>
+                    </div>
+                    <h4>AC Repair & Refrigerant Service</h4>
+                    <p class="text-secondary">Climate control inspection, R134a/R1234yf computerized refrigerant recovery and recharge, evaporator antimicrobial foaming, and cabin micro-filter replacement.</p>
+                    <ul class="list-unstyled small text-secondary my-3 d-flex flex-column gap-2">
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Refrigerant Gas Leak Detection</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Cabin Anti-Bacterial Sanitization</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Compressor & Condenser Coil Flush</li>
+                    </ul>
+                    <div class="card-footer-action mt-auto">
+                        <span class="text-muted small"><i class="fa-solid fa-clock me-1 text-orange"></i> 2 Hours</span>
+                        {% if current_user and current_user.role == 'customer' %}
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 5 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card shadow-sm h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-wrap mb-0">
+                            <i class="fa-solid fa-car-battery"></i>
+                        </div>
+                        <span class="badge bg-light text-navy fw-bold border px-3 py-2">From ₹799</span>
+                    </div>
+                    <h4>Battery & Electrical Diagnostics</h4>
+                    <p class="text-secondary">Digital battery cranking amps test, alternator diode test, starter motor load test, wiring harness continuity, and genuine replacement warranty fitments.</p>
+                    <ul class="list-unstyled small text-secondary my-3 d-flex flex-column gap-2">
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Dynamic Load & Cold Cranking Test</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Terminal Cleaning & Anti-Corrosion Grease</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Genuine Amaron/Exide Batteries with Warranty</li>
+                    </ul>
+                    <div class="card-footer-action mt-auto">
+                        <span class="text-muted small"><i class="fa-solid fa-clock me-1 text-orange"></i> 1 Hour</span>
+                        {% if current_user and current_user.role == 'customer' %}
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 6 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card shadow-sm h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-wrap mb-0">
+                            <i class="fa-solid fa-arrows-spin"></i>
+                        </div>
+                        <span class="badge bg-light text-navy fw-bold border px-3 py-2">From ₹899</span>
+                    </div>
+                    <h4>3D Wheel Alignment & Balancing</h4>
+                    <p class="text-secondary">High-definition 3D camera wheel alignment, toe, camber, and caster angle calibration, dynamic computer wheel balancing, and tire tread wear diagnosis.</p>
+                    <ul class="list-unstyled small text-secondary my-3 d-flex flex-column gap-2">
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Laser Camera 3D Multi-Axis Alignment</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Computerized Dynamic Wheel Balancing</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Improves Fuel Mileage & Steering Stability</li>
+                    </ul>
+                    <div class="card-footer-action mt-auto">
+                        <span class="text-muted small"><i class="fa-solid fa-clock me-1 text-orange"></i> 1 Hour</span>
+                        {% if current_user and current_user.role == 'customer' %}
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 7 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card shadow-sm h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-wrap mb-0">
+                            <i class="fa-solid fa-gears"></i>
+                        </div>
+                        <span class="badge bg-light text-navy fw-bold border px-3 py-2">From ₹3,499</span>
+                    </div>
+                    <h4>Suspension & Steering Overhaul</h4>
+                    <p class="text-secondary">Shock absorber replacement, strut mounts, tie rod ends, control arm bushings, steering rack overhaul, and vibration dampening calibration for smooth rides.</p>
+                    <ul class="list-unstyled small text-secondary my-3 d-flex flex-column gap-2">
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Eliminates Cabin Vibration & Clunking</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>OEM Gas-Charged Struts & Bushings</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Full Hydraulic Steering Inspection</li>
+                    </ul>
+                    <div class="card-footer-action mt-auto">
+                        <span class="text-muted small"><i class="fa-solid fa-clock me-1 text-orange"></i> 4-5 Hours</span>
+                        {% if current_user and current_user.role == 'customer' %}
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 8 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card shadow-sm h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-wrap mb-0">
+                            <i class="fa-solid fa-spray-can-sparkles"></i>
+                        </div>
+                        <span class="badge bg-light text-navy fw-bold border px-3 py-2">From ₹1,499</span>
+                    </div>
+                    <h4>Full Detailing & Ceramic Shield</h4>
+                    <p class="text-secondary">Snow foam pre-wash, clay bar paint decontamination, 3-stage rotary buffing polish, hydrophobic ceramic wax sealant, and deep upholstery steam sanitization.</p>
+                    <ul class="list-unstyled small text-secondary my-3 d-flex flex-column gap-2">
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Swirl Mark & Scratch Removal</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Interior Leather & Fabric Conditioning</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>High-Gloss Showroom Mirror Finish</li>
+                    </ul>
+                    <div class="card-footer-action mt-auto">
+                        <span class="text-muted small"><i class="fa-solid fa-clock me-1 text-orange"></i> 3 Hours</span>
+                        {% if current_user and current_user.role == 'customer' %}
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 9 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="service-card shadow-sm h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-wrap mb-0">
+                            <i class="fa-solid fa-wrench"></i>
+                        </div>
+                        <span class="badge bg-light text-navy fw-bold border px-3 py-2">Quote on Inspection</span>
+                    </div>
+                    <h4>Major Engine & Transmission Repair</h4>
+                    <p class="text-secondary">Timing belt/chain replacement, cylinder head overhaul, clutch plate & flywheel assembly, automatic transmission fluid flush, and engine valve calibration.</p>
+                    <ul class="list-unstyled small text-secondary my-3 d-flex flex-column gap-2">
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Factory Torque Specs Adherence</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Compression & Leakdown Testing</li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i>Backed by 6-Month Service Warranty</li>
+                    </ul>
+                    <div class="card-footer-action mt-auto">
+                        <span class="text-muted small"><i class="fa-solid fa-clock me-1 text-orange"></i> 1-2 Days</span>
+                        {% if current_user and current_user.role == 'customer' %}
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-orange">Book Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Assurance Banner -->
+        <div class="bg-navy text-white rounded-4 p-4 p-md-5 shadow-lg border border-warning">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <h3 class="fw-bold mb-2 text-white">Need a Custom Diagnostic or Fleet Service?</h3>
+                    <p class="text-light opacity-75 mb-0">
+                        Our workshop handles individual luxury vehicles, electric SUVs, commercial vehicles, and corporate fleet maintenance contracts with dedicated bay allocations.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{{ url_for('contact') }}" class="btn btn-orange btn-lg">
+                        <i class="fa-solid fa-phone me-1"></i> Speak to Our Master Tech
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

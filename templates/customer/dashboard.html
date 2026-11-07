@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Dashboard | Puneeth Vehicle Services{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-primary role-badge">Customer Portal</span>
+                    <h3 class="mb-0 fw-bold">Welcome, {{ current_user.full_name }}</h3>
+                </div>
+                <p class="text-secondary small mb-0">Manage your vehicles, book service appointments, and track repairs in real-time.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
+                    <i class="fa-solid fa-plus text-orange me-1"></i> Add Vehicle
+                </button>
+                <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#bookServiceModal">
+                    <i class="fa-solid fa-calendar-plus me-1"></i> Book Service Appointment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Metric Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">My Vehicles</span>
+                            <div class="stat-value">{{ vehicles|length }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-car-side"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card warning">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Pending Approval</span>
+                            <div class="stat-value">{{ pending_count }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card info">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">In Progress</span>
+                            <div class="stat-value">{{ active_count }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-wrench"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card success">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Completed Services</span>
+                            <div class="stat-value">{{ completed_count }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs dashboard-tabs" id="customerTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="services-tab" data-bs-toggle="tab" data-bs-target="#servicesTabPane" type="button" role="tab">
+                    <i class="fa-solid fa-clipboard-list text-orange"></i> My Service Requests & History ({{ services|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#vehiclesTabPane" type="button" role="tab">
+                    <i class="fa-solid fa-car text-orange"></i> My Registered Vehicles ({{ vehicles|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profileTabPane" type="button" role="tab">
+                    <i class="fa-solid fa-id-card text-orange"></i> Customer Profile
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="customerTabsContent">
+            <!-- TAB 1: SERVICES & TRACKING -->
+            <div class="tab-pane fade show active" id="servicesTabPane" role="tabpanel">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-screwdriver-wrench text-orange me-2"></i>Service Appointments</h5>
+                        <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#bookServiceModal">
+                            <i class="fa-solid fa-plus me-1"></i> New Service Request
+                        </button>
+                    </div>
+
+                    <div class="content-card-body p-0">
+                        {% if services %}
+                            <div class="table-responsive">
+                                <table class="table table-custom table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Vehicle</th>
+                                            <th>Service Type</th>
+                                            <th>Service Date</th>
+                                            <th>Live Status</th>
+                                            <th>Technician Notes</th>
+                                            <th>Service Charge</th>
+                                            <th>Payment</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for s in services %}
+                                            <tr>
+                                                <td class="fw-bold">#{{ s.service_id }}</td>
+                                                <td>
+                                                    <span class="badge bg-dark">{{ s.vehicle_number }}</span>
+                                                    <div class="small text-muted">{{ s.vehicle_model }}</div>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold">{{ s.service_type }}</div>
+                                                    <small class="text-secondary text-truncate d-block" style="max-width: 200px;">{{ s.description or 'No notes provided' }}</small>
+                                                </td>
+                                                <td>{{ s.service_date }}</td>
+                                                <td>
+                                                    {% if s.status == 'Pending' %}
+                                                        <span class="badge-status badge-pending"><i class="fa-regular fa-clock"></i> Pending Approval</span>
+                                                    {% elif s.status == 'Approved' %}
+                                                        <span class="badge-status badge-approved"><i class="fa-solid fa-check"></i> Approved</span>
+                                                    {% elif s.status == 'In Progress' %}
+                                                        <span class="badge-status badge-inprogress"><i class="fa-solid fa-gear fa-spin"></i> In Progress</span>
+                                                    {% elif s.status == 'Completed' %}
+                                                        <span class="badge-status badge-completed"><i class="fa-solid fa-circle-check"></i> Completed</span>
+                                                    {% else %}
+                                                        <span class="badge-status badge-cancelled"><i class="fa-solid fa-ban"></i> Cancelled</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small class="text-secondary">{{ s.mechanic_notes or 'Inspection pending' }}</small>
+                                                </td>
+                                                <td class="fw-bold text-navy">
+                                                    {% if s.service_charge and s.service_charge > 0 %}
+                                                        ₹{{ "%.2f"|format(s.service_charge) }}
+                                                    {% else %}
+                                                        <span class="text-muted small">Quote Pending</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if s.payment_status == 'Paid' %}
+                                                        <span class="badge-status badge-paid"><i class="fa-solid fa-check-double"></i> Paid</span>
+                                                    {% elif s.service_charge and s.service_charge > 0 %}
+                                                        <button class="btn btn-sm btn-outline-success py-0 px-2 btn-pay-bill" data-payment-id="{{ s.payment_id }}" data-amount="{{ s.service_charge }}" data-service-type="{{ s.service_type|forceescape }}" data-vehicle-number="{{ s.vehicle_number|forceescape }}">
+                                                            <i class="fa-solid fa-credit-card me-1"></i> Pay ₹{{ "%.2f"|format(s.service_charge) }}
+                                                        </button>
+                                                    {% else %}
+                                                        <span class="text-muted small">—</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <button class="btn-action btn-action-view btn-track-service" title="Track Live Status" data-service="{{ s|tojson|forceescape }}">
+                                                        <i class="fa-solid fa-route"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <div class="text-muted fs-1 mb-3"><i class="fa-solid fa-calendar-xmark"></i></div>
+                                <h5>No Service Appointments Yet</h5>
+                                <p class="text-secondary small mb-3">You haven't requested any vehicle services. Book your first appointment today!</p>
+                                <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#bookServiceModal">
+                                    <i class="fa-solid fa-plus me-1"></i> Book a Service Appointment
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: MY VEHICLES -->
+            <div class="tab-pane fade" id="vehiclesTabPane" role="tabpanel">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-car text-orange me-2"></i>Registered Vehicles</h5>
+                        <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
+                            <i class="fa-solid fa-plus me-1"></i> Register New Vehicle
+                        </button>
+                    </div>
+
+                    <div class="content-card-body">
+                        {% if vehicles %}
+                            <div class="row g-4">
+                                {% for v in vehicles %}
+                                    <div class="col-lg-4 col-md-6" id="vehicle-card-{{ v.vehicle_id }}">
+                                        <div class="card h-100 border shadow-sm rounded-3">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                                    <div>
+                                                        <span class="badge bg-navy px-3 py-2 fs-6">{{ v.vehicle_number }}</span>
+                                                    </div>
+                                                    <span class="badge bg-light text-secondary border">{{ v.vehicle_type }}</span>
+                                                </div>
+                                                <h5 class="card-title fw-bold text-navy">{{ v.vehicle_model }}</h5>
+                                                <div class="text-secondary small mb-3">
+                                                    <i class="fa-solid fa-clock-rotate-left me-1 text-orange"></i> Services Logged: <strong>{{ v.service_count }}</strong>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    <button class="btn btn-sm btn-outline-orange flex-fill btn-book-vehicle" data-vehicle-id="{{ v.vehicle_id }}" data-vehicle-number="{{ v.vehicle_number|forceescape }}">
+                                                        <i class="fa-solid fa-calendar-plus me-1"></i> Book Service
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger btn-delete-vehicle" title="Delete Vehicle" data-vehicle-id="{{ v.vehicle_id }}" data-vehicle-number="{{ v.vehicle_number|forceescape }}">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <div class="text-muted fs-1 mb-3"><i class="fa-solid fa-car"></i></div>
+                                <h5>No Vehicles Registered</h5>
+                                <p class="text-secondary small mb-3">Register your automobile or two-wheeler to schedule appointments with our service centre.</p>
+                                <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
+                                    <i class="fa-solid fa-plus me-1"></i> Add Your Vehicle
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: CUSTOMER PROFILE -->
+            <div class="tab-pane fade" id="profileTabPane" role="tabpanel">
+                <div class="row justify-content-center">
+                    <div class="col-lg-7">
+                        <div class="content-card">
+                            <div class="content-card-header">
+                                <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-user-pen text-orange me-2"></i>My Customer Profile</h5>
+                            </div>
+                            <div class="content-card-body">
+                                <form id="customerProfileForm" onsubmit="updateCustomerProfile(event)">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Full Name</label>
+                                        <input type="text" id="prof_name" class="form-control" value="{{ customer.name if customer else current_user.full_name }}" required>
+                                    </div>
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Phone Number</label>
+                                            <input type="tel" id="prof_phone" class="form-control" value="{{ customer.phone if customer else '' }}" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Email Address</label>
+                                            <input type="email" id="prof_email" class="form-control" value="{{ customer.email if customer else current_user.email }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label small fw-bold">Address</label>
+                                        <textarea id="prof_address" class="form-control" rows="3">{{ customer.address if customer else '' }}</textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-orange">
+                                        <i class="fa-solid fa-floppy-disk me-1"></i> Save Profile Changes
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: ADD VEHICLE
+     ============================================================================== -->
+<div class="modal fade" id="addVehicleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-car text-orange"></i> Register New Vehicle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addVehicleForm" onsubmit="submitAddVehicle(event)">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Vehicle Registration Number *</label>
+                        <input type="text" id="veh_number" class="form-control text-uppercase" placeholder="e.g. KA-01-AB-1234" required>
+                        <small class="text-muted">Enter your state registration number</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Vehicle Make & Model *</label>
+                        <input type="text" id="veh_model" class="form-control" placeholder="e.g. Hyundai Creta 1.5 SX" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Vehicle Type *</label>
+                        <select id="veh_type" class="form-select" required>
+                            <option value="SUV">SUV</option>
+                            <option value="Sedan">Sedan</option>
+                            <option value="Hatchback">Hatchback</option>
+                            <option value="Electric SUV">Electric SUV / EV</option>
+                            <option value="Motorcycle">Motorcycle / Two-Wheeler</option>
+                            <option value="Luxury">Luxury / Sports</option>
+                            <option value="Truck">Truck / Commercial</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-orange"><i class="fa-solid fa-plus me-1"></i> Add Vehicle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: BOOK SERVICE APPOINTMENT
+     ============================================================================== -->
+<div class="modal fade" id="bookServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-calendar-plus text-orange"></i> Request Service Appointment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="bookServiceForm" onsubmit="submitBookService(event)">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Select Registered Vehicle *</label>
+                        {% if vehicles %}
+                            <select id="srv_vehicle_id" class="form-select" required>
+                                {% for v in vehicles %}
+                                    <option value="{{ v.vehicle_id }}">{{ v.vehicle_number }} — {{ v.vehicle_model }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <div class="alert alert-warning small mb-0">
+                                You have not registered any vehicles yet. Please add a vehicle first.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Service Type *</label>
+                        <select id="srv_type" class="form-select" required>
+                            <option value="Periodic Maintenance & Oil Change">Periodic Maintenance & Oil Change</option>
+                            <option value="Brake System Overhaul">Brake System Overhaul</option>
+                            <option value="ECU Computer Diagnostics">ECU Computer Diagnostics</option>
+                            <option value="AC Cooling & Filter Service">AC Cooling & Filter Service</option>
+                            <option value="Battery & Electrical Diagnostics">Battery & Electrical Diagnostics</option>
+                            <option value="3D Wheel Alignment & Balancing">3D Wheel Alignment & Balancing</option>
+                            <option value="Suspension & Steering Checkup">Suspension & Steering Checkup</option>
+                            <option value="Complete Detailing & Wash">Complete Detailing & Wash</option>
+                            <option value="General Inspection & Repair">General Inspection & Repair</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Preferred Appointment Date *</label>
+                        <input type="date" id="srv_date" class="form-control" required min="{{ current_date or '2026-11-07' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Description / Symptoms Observed</label>
+                        <textarea id="srv_desc" class="form-control" rows="3" placeholder="Describe any noises, vibrations, warnings, or specific requests..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-orange" {% if not vehicles %}disabled{% endif %}>
+                        <i class="fa-solid fa-paper-plane me-1"></i> Submit Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: TRACK SERVICE LIVE STATUS
+     ============================================================================== -->
+<div class="modal fade" id="trackServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-route text-orange"></i> Live Service Tracker</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0" id="trackSrvType">Periodic Maintenance</h5>
+                        <small class="text-secondary" id="trackSrvVeh">KA-01-MJ-2024 (Hyundai Creta)</small>
+                    </div>
+                    <span class="badge bg-navy px-3 py-2" id="trackSrvId">#1</span>
+                </div>
+
+                <!-- Stepper Progress Bar -->
+                <div class="service-stepper" id="trackStepper">
+                    <div class="step-item" id="stepPending">
+                        <div class="step-circle"><i class="fa-solid fa-file-lines"></i></div>
+                        <div class="step-text">Requested</div>
+                    </div>
+                    <div class="step-item" id="stepApproved">
+                        <div class="step-circle"><i class="fa-solid fa-check"></i></div>
+                        <div class="step-text">Approved</div>
+                    </div>
+                    <div class="step-item" id="stepInProgress">
+                        <div class="step-circle"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                        <div class="step-text">In Progress</div>
+                    </div>
+                    <div class="step-item" id="stepCompleted">
+                        <div class="step-circle"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="step-text">Completed</div>
+                    </div>
+                </div>
+
+                <div class="bg-light p-3 rounded-3 border mt-4">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <span class="text-muted small">Assigned Technician:</span>
+                            <div class="fw-bold" id="trackTechnician">Assigning...</div>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-muted small">Service Charge:</span>
+                            <div class="fw-bold text-navy" id="trackCharge">₹0.00</div>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <span class="text-muted small">Technician Notes:</span>
+                            <div class="small text-secondary" id="trackNotes">No updates yet.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: PAY BILL
+     ============================================================================== -->
+<div class="modal fade" id="payBillModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-credit-card text-orange"></i> Settle Service Invoice</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="payBillForm" onsubmit="submitPayment(event)">
+                <input type="hidden" id="pay_payment_id">
+                <div class="modal-body">
+                    <div class="p-3 bg-light rounded-3 border mb-3 text-center">
+                        <div class="text-secondary small">Total Invoice Due</div>
+                        <div class="fs-2 fw-bold text-navy" id="pay_amount_display">₹0.00</div>
+                        <small class="text-muted" id="pay_service_display">Service invoice</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Select Payment Mode *</label>
+                        <select id="pay_method" class="form-select" required>
+                            <option value="UPI / QR">UPI / QR (Instant GooglePay / PhonePe / Paytm)</option>
+                            <option value="Credit/Debit Card">Credit / Debit Card</option>
+                            <option value="Net Banking">Net Banking</option>
+                            <option value="Cash">Cash at Service Bay</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info small mb-0">
+                        <i class="fa-solid fa-shield-halved me-1"></i> Secure 256-Bit SSL payment simulation. Instant MySQL transaction update.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="fa-solid fa-check me-1"></i> Confirm & Pay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/customer.js') }}"></script>
+{% endblock %}
+

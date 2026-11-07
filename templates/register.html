@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Registration | Puneeth Vehicle Services{% endblock %}
+
+{% block content %}
+<div class="py-5" style="background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%); min-height: 85vh; display: flex; align-items: center;">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-9">
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="card-header bg-navy text-white text-center py-4 border-bottom border-warning border-3">
+                        <div class="brand-badge mx-auto mb-2" style="background: var(--accent-orange); color: white; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.25rem;">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <h4 class="fw-bold mb-1">Create Customer Account</h4>
+                        <p class="text-light opacity-75 small mb-0">Join Puneeth Vehicle Services to manage your vehicles & book repairs</p>
+                    </div>
+
+                    <div class="card-body p-4 p-md-5 bg-white">
+                        <form method="POST" action="{{ url_for('auth.register') }}">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-secondary">Full Name *</label>
+                                    <input type="text" name="full_name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-secondary">Username *</label>
+                                    <input type="text" name="username" class="form-control" placeholder="e.g. rahul_s" required>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-secondary">Email Address *</label>
+                                    <input type="email" name="email" class="form-control" placeholder="e.g. rahul@example.com" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-secondary">Phone Number *</label>
+                                    <input type="tel" name="phone" class="form-control" placeholder="10-digit mobile" pattern="[0-9]{10,15}" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-secondary">Residential / Office Address</label>
+                                <textarea name="address" class="form-control" rows="2" placeholder="e.g. #12, 5th Cross, Indiranagar, Bengaluru"></textarea>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-secondary">Password *</label>
+                                    <input type="password" name="password" class="form-control" placeholder="Min 6 characters" minlength="6" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-secondary">Confirm Password *</label>
+                                    <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" minlength="6" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-orange w-100 py-2 fw-bold">
+                                <i class="fa-solid fa-user-check me-1"></i> Complete Registration
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-4 pt-3 border-top">
+                            <span class="text-muted small">Already have an account? </span>
+                            <a href="{{ url_for('auth.login') }}" class="text-orange fw-bold small text-decoration-none">
+                                Sign In
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

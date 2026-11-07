@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Service Process | Puneeth Vehicle Services{% endblock %}
+
+{% block content %}
+<!-- Page Header Banner -->
+<div class="py-5 bg-navy text-white position-relative" style="background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%); border-bottom: 3px solid var(--accent-orange);">
+    <div class="container py-3">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb small mb-2">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-orange text-decoration-none">Home</a></li>
+                        <li class="breadcrumb-item active text-light" aria-current="page">Service Process</li>
+                    </ol>
+                </nav>
+                <h1 class="display-5 fw-bold text-white mb-2">Our Seamless <span class="text-orange">Service Process</span></h1>
+                <p class="text-light opacity-75 lead mb-0">
+                    A modern 4-step digital workflow that ensures complete transparency, accountability, and speed.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                {% if current_user and current_user.role == 'customer' %}
+                    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-orange btn-lg">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Book an Appointment
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-orange btn-lg">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Customer Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed 4-Step Process Section -->
+<section class="py-5" style="background-color: #F8FAFC;">
+    <div class="container py-4">
+        <div class="section-title-wrap">
+            <span class="section-subtitle">How It Works</span>
+            <h2 class="section-title">Step-by-Step Vehicle Service Journey</h2>
+            <p class="text-secondary max-w-600 mx-auto">
+                No guessing games, no forgotten repair requests. See exactly how our system tracks your automobile from initial request to delivery.
+            </p>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <!-- Step 1 -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm p-4 p-md-5 rounded-4 bg-white position-relative overflow-hidden">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="step-number mb-0" style="width: 55px; height: 55px; font-size: 1.4rem;">1</div>
+                        <div>
+                            <span class="badge bg-warning text-dark px-3 py-1 mb-1">Step 1 — Online Booking</span>
+                            <h4 class="fw-bold text-navy mb-0">Digital Service Request</h4>
+                        </div>
+                    </div>
+                    <p class="text-secondary">
+                        Vehicle owners can register their vehicle details (make, model, license number) and select a specialized service type along with preferred appointment date and symptom descriptions.
+                    </p>
+                    <ul class="list-unstyled small text-secondary d-flex flex-column gap-2 mb-4">
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Record created in MySQL `services` table with status `Pending`</li>
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Multi-vehicle fleet support for single customer accounts</li>
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Instant confirmation visible in customer portal</li>
+                    </ul>
+                    <div class="p-3 bg-light rounded-3 border small text-muted">
+                        <i class="fa-solid fa-lightbulb text-orange me-1"></i> Tip: Describe strange sounds or warning lights to help our diagnostic technicians prepare bay equipment in advance.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm p-4 p-md-5 rounded-4 bg-white position-relative overflow-hidden">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="step-number mb-0" style="width: 55px; height: 55px; font-size: 1.4rem;">2</div>
+                        <div>
+                            <span class="badge bg-info text-white px-3 py-1 mb-1">Step 2 — Bay Inspection</span>
+                            <h4 class="fw-bold text-navy mb-0">Computerized Diagnostic & Quote</h4>
+                        </div>
+                    </div>
+                    <p class="text-secondary">
+                        Upon vehicle arrival, our lead technicians conduct a comprehensive 40-point inspection and connect OBD-II diagnostic scanners to analyze live ECU fault codes.
+                    </p>
+                    <ul class="list-unstyled small text-secondary d-flex flex-column gap-2 mb-4">
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Admin approves service and assigns a dedicated mechanic</li>
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Transparent service charge calculated and updated in MySQL</li>
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Customer status transitions to `Approved`</li>
+                    </ul>
+                    <div class="p-3 bg-light rounded-3 border small text-muted">
+                        <i class="fa-solid fa-file-invoice text-orange me-1"></i> No hidden fees: Customer views the exact service charge before any work begins.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm p-4 p-md-5 rounded-4 bg-white position-relative overflow-hidden">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="step-number mb-0" style="width: 55px; height: 55px; font-size: 1.4rem;">3</div>
+                        <div>
+                            <span class="badge bg-primary text-white px-3 py-1 mb-1">Step 3 — Precision Repair</span>
+                            <h4 class="fw-bold text-navy mb-0">Factory-Grade Workshop Service</h4>
+                        </div>
+                    </div>
+                    <p class="text-secondary">
+                        The assigned mechanic logs into the dedicated Mechanic Bay dashboard, views the complaint log, transitions status to `In Progress`, and carries out the repair.
+                    </p>
+                    <ul class="list-unstyled small text-secondary d-flex flex-column gap-2 mb-4">
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Only genuine OEM replacement parts fitted</li>
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Mechanic types real-time progress notes directly into the database</li>
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Customer can refresh their dashboard to view real-time notes</li>
+                    </ul>
+                    <div class="p-3 bg-light rounded-3 border small text-muted">
+                        <i class="fa-solid fa-wrench text-orange me-1"></i> Quality assurance: All torque settings strictly follow OEM factory manuals.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm p-4 p-md-5 rounded-4 bg-white position-relative overflow-hidden">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="step-number mb-0" style="width: 55px; height: 55px; font-size: 1.4rem;">4</div>
+                        <div>
+                            <span class="badge bg-success text-white px-3 py-1 mb-1">Step 4 — Final Delivery</span>
+                            <h4 class="fw-bold text-navy mb-0">Road Test & Digital Settlement</h4>
+                        </div>
+                    </div>
+                    <p class="text-secondary">
+                        The vehicle undergoes an exhaustive road test, complimentary foam wash, and sanitized handover. Mechanic marks the service `Completed`.
+                    </p>
+                    <ul class="list-unstyled small text-secondary d-flex flex-column gap-2 mb-4">
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Digital invoice synced directly to customer portal</li>
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>Instant settlement via UPI / QR, Card, or Cash</li>
+                        <li><i class="fa-solid fa-circle-check text-success me-2"></i>6-Month / 10,000 km warranty automatically activated</li>
+                    </ul>
+                    <div class="p-3 bg-light rounded-3 border small text-muted">
+                        <i class="fa-solid fa-receipt text-orange me-1"></i> Digital Records: Invoices and service history remain saved permanently in MySQL for resale proof.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Status Tracking Demonstration Card -->
+        <div class="card border-0 shadow-lg p-4 p-md-5 rounded-4 bg-white mb-5">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-5">
+                    <span class="section-subtitle">Real-Time Innovation</span>
+                    <h3 class="fw-bold text-navy mb-3">Live Service Tracking Demonstration</h3>
+                    <p class="text-secondary small">
+                        Here is a preview of the interactive progress stepper available in the customer portal. Whenever our technician updates your job status, your screen updates in real time.
+                    </p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-orange btn-sm">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Try Client Tracker
+                    </a>
+                </div>
+                <div class="col-lg-7">
+                    <div class="p-4 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="fw-bold mb-0 text-navy">Periodic Maintenance & Oil Change</h6>
+                                <small class="text-muted">KA-01-MJ-2024 (Hyundai Creta)</small>
+                            </div>
+                            <span class="badge bg-navy px-3 py-2">Service #1</span>
+                        </div>
+
+                        <!-- Demo Stepper -->
+                        <div class="d-flex justify-content-between position-relative my-4" style="border-top: 3px solid #CBD5E1; padding-top: 15px;">
+                            <div class="text-center" style="margin-top: -30px;">
+                                <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;"><i class="fa-solid fa-check"></i></div>
+                                <div class="small fw-bold mt-1 text-success">Requested</div>
+                            </div>
+                            <div class="text-center" style="margin-top: -30px;">
+                                <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;"><i class="fa-solid fa-check"></i></div>
+                                <div class="small fw-bold mt-1 text-success">Approved</div>
+                            </div>
+                            <div class="text-center" style="margin-top: -30px;">
+                                <div class="rounded-circle bg-orange text-white d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;"><i class="fa-solid fa-wrench"></i></div>
+                                <div class="small fw-bold mt-1 text-orange">In Progress</div>
+                            </div>
+                            <div class="text-center" style="margin-top: -30px;">
+                                <div class="rounded-circle bg-white text-secondary border border-2 d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;"><i class="fa-regular fa-circle"></i></div>
+                                <div class="small fw-bold mt-1 text-muted">Completed</div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white rounded border small mt-3">
+                            <span class="text-muted">Latest Technician Note:</span>
+                            <div class="fw-semibold text-navy">"Synthetic 5W-30 engine oil filled, new Bosch oil filter fitted. Brakes cleaned. Testing bay..."</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

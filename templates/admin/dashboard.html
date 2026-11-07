@@ -1,0 +1,821 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Control Panel | Puneeth Vehicle Services{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="container-fluid px-lg-5 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-danger role-badge">System Administrator</span>
+                    <h3 class="mb-0 fw-bold">Puneeth Vehicle Services — Control Hub</h3>
+                </div>
+                <p class="text-secondary small mb-0">Master database management, customer records, mechanic dispatch, and revenue accounting.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-outline-secondary btn-sm" onclick="refreshAdminStats()">
+                    <i class="fa-solid fa-arrows-rotate me-1"></i> Sync DB
+                </button>
+                <button class="btn btn-navy btn-sm" data-bs-toggle="modal" data-bs-target="#adminCustomerModal" onclick="resetCustomerForm()">
+                    <i class="fa-solid fa-user-plus text-orange me-1"></i> New Customer
+                </button>
+                <button class="btn btn-navy btn-sm" data-bs-toggle="modal" data-bs-target="#adminVehicleModal" onclick="resetVehicleForm()">
+                    <i class="fa-solid fa-car text-orange me-1"></i> New Vehicle
+                </button>
+                <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#adminServiceModal" onclick="resetServiceForm()">
+                    <i class="fa-solid fa-calendar-plus me-1"></i> New Service
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid px-lg-5">
+        <!-- KPI Metrics (Dynamically updated from MySQL) -->
+        <div class="row g-3 mb-4">
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Customers</span>
+                            <div class="stat-value" id="kpi_customers">{{ stats.total_customers }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="stat-card info">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Vehicles</span>
+                            <div class="stat-value" id="kpi_vehicles">{{ stats.total_vehicles }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-car"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="stat-card navy">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Total Services</span>
+                            <div class="stat-value" id="kpi_services">{{ stats.total_services }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="stat-card warning">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Pending Services</span>
+                            <div class="stat-value" id="kpi_pending">{{ stats.pending_services }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="stat-card success">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Completed</span>
+                            <div class="stat-value" id="kpi_completed">{{ stats.completed_services }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Total Revenue</span>
+                            <div class="stat-value text-success" id="kpi_revenue">₹{{ "%.2f"|format(stats.total_revenue) }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Analytics Row (Chart.js) -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="content-card h-100 mb-0">
+                    <div class="content-card-header">
+                        <h6 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-chart-area text-orange me-2"></i>Revenue Analytics (Monthly Paid Invoices)</h6>
+                        <span class="badge bg-light text-secondary border">Real-time Chart.js</span>
+                    </div>
+                    <div class="content-card-body">
+                        <canvas id="revenueChart" height="110"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="content-card h-100 mb-0">
+                    <div class="content-card-header">
+                        <h6 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-chart-pie text-orange me-2"></i>Service Status Ratio</h6>
+                    </div>
+                    <div class="content-card-body d-flex align-items-center justify-content-center">
+                        <div style="width: 240px; height: 240px;">
+                            <canvas id="statusDoughnutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs for 4 Main Management Modules -->
+        <ul class="nav nav-tabs dashboard-tabs" id="adminTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="services-tab" data-bs-toggle="tab" data-bs-target="#tabServices" type="button" role="tab">
+                    <i class="fa-solid fa-wrench text-orange"></i> Service Management ({{ services|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="customers-tab" data-bs-toggle="tab" data-bs-target="#tabCustomers" type="button" role="tab">
+                    <i class="fa-solid fa-users text-orange"></i> Customer Management ({{ customers|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#tabVehicles" type="button" role="tab">
+                    <i class="fa-solid fa-car text-orange"></i> Vehicle Management ({{ vehicles|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#tabPayments" type="button" role="tab">
+                    <i class="fa-solid fa-receipt text-orange"></i> Payment Management ({{ payments|length }})
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#tabSettings" type="button" role="tab">
+                    <i class="fa-solid fa-sliders text-orange"></i> Site Banner & Settings
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabsContent">
+            <!-- ============================================================== -->
+            <!-- 1. SERVICE MANAGEMENT -->
+            <!-- ============================================================== -->
+            <div class="tab-pane fade show active" id="tabServices" role="tabpanel">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-list-check text-orange me-2"></i>All Service Orders</h5>
+                            <!-- Filter by Status -->
+                            <select id="filterServiceStatus" class="form-select form-select-sm" style="width: 170px;" onchange="filterAdminServices()">
+                                <option value="">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <div class="table-search-box">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="serviceSearch" class="form-control form-control-sm" placeholder="Search service, vehicle..." onkeyup="filterAdminServices()">
+                            </div>
+                            <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#adminServiceModal" onclick="resetServiceForm()">
+                                <i class="fa-solid fa-plus me-1"></i> New Service
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="content-card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom table-hover align-middle" id="adminServicesTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Vehicle Number</th>
+                                        <th>Customer</th>
+                                        <th>Service Type</th>
+                                        <th>Date</th>
+                                        <th>Charge</th>
+                                        <th>Assigned Mechanic</th>
+                                        <th>Status</th>
+                                        <th>Payment</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in services %}
+                                        <tr data-status="{{ s.status }}">
+                                            <td class="fw-bold">#{{ s.service_id }}</td>
+                                            <td>
+                                                <span class="badge bg-dark">{{ s.vehicle_number }}</span>
+                                                <div class="small text-muted">{{ s.vehicle_model }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold">{{ s.customer_name }}</div>
+                                                <small class="text-muted">{{ s.customer_phone }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold text-navy">{{ s.service_type }}</div>
+                                                <small class="text-secondary text-truncate d-block" style="max-width: 200px;">{{ s.description }}</small>
+                                            </td>
+                                            <td>{{ s.service_date }}</td>
+                                            <td class="fw-bold text-navy">₹{{ "%.2f"|format(s.service_charge) }}</td>
+                                            <td>
+                                                {% if s.mechanic_name %}
+                                                    <span class="badge bg-light text-navy border"><i class="fa-solid fa-wrench me-1 text-orange"></i>{{ s.mechanic_name }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-light text-danger border">Unassigned</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if s.status == 'Pending' %}
+                                                    <span class="badge-status badge-pending">Pending</span>
+                                                {% elif s.status == 'Approved' %}
+                                                    <span class="badge-status badge-approved">Approved</span>
+                                                {% elif s.status == 'In Progress' %}
+                                                    <span class="badge-status badge-inprogress"><i class="fa-solid fa-gear fa-spin"></i> In Progress</span>
+                                                {% elif s.status == 'Completed' %}
+                                                    <span class="badge-status badge-completed"><i class="fa-solid fa-circle-check"></i> Completed</span>
+                                                {% else %}
+                                                    <span class="badge-status badge-cancelled">Cancelled</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if s.payment_status == 'Paid' %}
+                                                    <span class="badge-status badge-paid">Paid</span>
+                                                {% elif s.payment_status == 'Failed' %}
+                                                    <span class="badge-status badge-failed">Failed</span>
+                                                {% else %}
+                                                    <span class="badge-status badge-pending">Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                <button class="btn-action btn-action-edit btn-edit-service" title="Edit / Assign Mechanic / Update Charge" data-service="{{ s|tojson|forceescape }}">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                <button class="btn-action btn-action-delete btn-delete-service" title="Delete Service" data-service-id="{{ s.service_id }}">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- 2. CUSTOMER MANAGEMENT -->
+            <!-- ============================================================== -->
+            <div class="tab-pane fade" id="tabCustomers" role="tabpanel">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-users text-orange me-2"></i>Customers Registry</h5>
+                        <div class="d-flex gap-2">
+                            <div class="table-search-box">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="customerSearch" class="form-control form-control-sm" placeholder="Search customer name, phone..." onkeyup="filterAdminCustomers()">
+                            </div>
+                            <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#adminCustomerModal" onclick="resetCustomerForm()">
+                                <i class="fa-solid fa-plus me-1"></i> Add Customer
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="content-card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom table-hover align-middle" id="adminCustomersTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Customer Name</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th>Address</th>
+                                        <th>Vehicles</th>
+                                        <th>Services</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in customers %}
+                                        <tr>
+                                            <td class="fw-bold">#{{ c.customer_id }}</td>
+                                            <td class="fw-bold text-navy">{{ c.name }}</td>
+                                            <td>{{ c.phone }}</td>
+                                            <td>{{ c.email }}</td>
+                                            <td><small class="text-secondary text-truncate d-block" style="max-width: 250px;">{{ c.address or '—' }}</small></td>
+                                            <td><span class="badge bg-light text-navy border">{{ c.total_vehicles }} Vehicles</span></td>
+                                            <td><span class="badge bg-light text-navy border">{{ c.total_services }} Services</span></td>
+                                            <td class="text-end">
+                                                <button class="btn-action btn-action-edit btn-edit-customer" title="Edit Customer" data-customer="{{ c|tojson|forceescape }}">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                <button class="btn-action btn-action-delete btn-delete-customer" title="Delete Customer" data-customer-id="{{ c.customer_id }}" data-customer-name="{{ c.name|forceescape }}">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- 3. VEHICLE MANAGEMENT -->
+            <!-- ============================================================== -->
+            <div class="tab-pane fade" id="tabVehicles" role="tabpanel">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-car text-orange me-2"></i>Vehicles Database</h5>
+                        <div class="d-flex gap-2">
+                            <div class="table-search-box">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="vehicleSearch" class="form-control form-control-sm" placeholder="Search vehicle number, owner..." onkeyup="filterAdminVehicles()">
+                            </div>
+                            <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#adminVehicleModal" onclick="resetVehicleForm()">
+                                <i class="fa-solid fa-plus me-1"></i> Add Vehicle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="content-card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom table-hover align-middle" id="adminVehiclesTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Registration Number</th>
+                                        <th>Model / Specification</th>
+                                        <th>Vehicle Type</th>
+                                        <th>Owner Name</th>
+                                        <th>Contact</th>
+                                        <th>Services</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for v in vehicles %}
+                                        <tr>
+                                            <td class="fw-bold">#{{ v.vehicle_id }}</td>
+                                            <td><span class="badge bg-navy fs-6">{{ v.vehicle_number }}</span></td>
+                                            <td class="fw-semibold text-navy">{{ v.vehicle_model }}</td>
+                                            <td><span class="badge bg-light text-secondary border">{{ v.vehicle_type }}</span></td>
+                                            <td class="fw-semibold">{{ v.customer_name }}</td>
+                                            <td><small class="text-muted">{{ v.customer_phone }}</small></td>
+                                            <td><span class="badge bg-light text-navy border">{{ v.total_services }} Logged</span></td>
+                                            <td class="text-end">
+                                                <button class="btn-action btn-action-edit btn-edit-vehicle" title="Edit Vehicle" data-vehicle="{{ v|tojson|forceescape }}">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                <button class="btn-action btn-action-delete btn-delete-vehicle" title="Delete Vehicle" data-vehicle-id="{{ v.vehicle_id }}" data-vehicle-number="{{ v.vehicle_number|forceescape }}">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- 4. PAYMENT MANAGEMENT -->
+            <!-- ============================================================== -->
+            <div class="tab-pane fade" id="tabPayments" role="tabpanel">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-receipt text-orange me-2"></i>Invoices & Payment Records</h5>
+                            <select id="filterPaymentStatus" class="form-select form-select-sm" style="width: 160px;" onchange="filterAdminPayments()">
+                                <option value="">All Payments</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <div class="table-search-box">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="paymentSearch" class="form-control form-control-sm" placeholder="Search payment, client..." onkeyup="filterAdminPayments()">
+                            </div>
+                            <button class="btn btn-orange btn-sm" data-bs-toggle="modal" data-bs-target="#adminPaymentModal" onclick="resetPaymentForm()">
+                                <i class="fa-solid fa-plus me-1"></i> Record Payment
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="content-card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom table-hover align-middle" id="adminPaymentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Payment ID</th>
+                                        <th>Service ID</th>
+                                        <th>Customer</th>
+                                        <th>Vehicle</th>
+                                        <th>Amount</th>
+                                        <th>Payment Date</th>
+                                        <th>Method</th>
+                                        <th>Status</th>
+                                        <th>Txn Ref</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in payments %}
+                                        <tr data-status="{{ p.status }}">
+                                            <td class="fw-bold">#{{ p.payment_id }}</td>
+                                            <td>
+                                                <span class="badge bg-light text-navy border">Service #{{ p.service_id }}</span>
+                                                <div class="small text-muted">{{ p.service_type }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold">{{ p.customer_name }}</div>
+                                                <small class="text-muted">{{ p.customer_phone }}</small>
+                                            </td>
+                                            <td><span class="badge bg-dark">{{ p.vehicle_number }}</span></td>
+                                            <td class="fw-bold text-success fs-6">₹{{ "%.2f"|format(p.amount) }}</td>
+                                            <td>{{ p.payment_date }}</td>
+                                            <td><span class="badge bg-light text-secondary border">{{ p.payment_method }}</span></td>
+                                            <td>
+                                                {% if p.status == 'Paid' %}
+                                                    <span class="badge-status badge-paid"><i class="fa-solid fa-circle-check"></i> Paid</span>
+                                                {% elif p.status == 'Failed' %}
+                                                    <span class="badge-status badge-failed"><i class="fa-solid fa-circle-xmark"></i> Failed</span>
+                                                {% else %}
+                                                    <span class="badge-status badge-pending"><i class="fa-solid fa-clock"></i> Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><small class="text-muted font-monospace">{{ p.transaction_id or '—' }}</small></td>
+                                            <td class="text-end">
+                                                <button class="btn-action btn-action-edit btn-edit-payment" title="Update Payment Status" data-payment="{{ p|tojson|forceescape }}">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                <button class="btn-action btn-action-delete btn-delete-payment" title="Delete Payment Record" data-payment-id="{{ p.payment_id }}">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- 5. SITE BANNER & SETTINGS -->
+            <!-- ============================================================== -->
+            <div class="tab-pane fade" id="tabSettings" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="content-card">
+                            <div class="content-card-header">
+                                <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-image text-orange me-2"></i>Homepage Hero Photograph</h5>
+                            </div>
+                            <div class="content-card-body">
+                                <p class="text-secondary small">
+                                    Upload or replace the hero background banner image for Puneeth Vehicle Services. 
+                                    The image will automatically be styled with responsive distortion-free cover rendering.
+                                </p>
+                                <div class="mb-3 text-center p-3 bg-light rounded-3 border">
+                                    <img src="{{ url_for('static', filename='images/hero-banner.jpg') }}?t=1" id="heroPreviewImg" class="img-fluid rounded shadow-sm" style="max-height: 220px; object-fit: cover; width: 100%;" alt="Current Hero Banner">
+                                </div>
+                                <form id="uploadHeroForm" onsubmit="submitHeroUpload(event)" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Select High-Resolution Photograph (JPG, PNG, WEBP)</label>
+                                        <input type="file" name="hero_image" id="hero_image_file" class="form-control" accept="image/*" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-orange">
+                                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> Upload & Apply Banner
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="content-card">
+                            <div class="content-card-header">
+                                <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-database text-orange me-2"></i>MySQL Database Connectivity</h5>
+                            </div>
+                            <div class="content-card-body">
+                                <table class="table table-sm table-borderless small mb-3">
+                                    <tr>
+                                        <td class="text-muted" style="width: 160px;">Database Name:</td>
+                                        <td class="fw-bold font-monospace text-navy">puneeth_vehicle_services</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Host & Port:</td>
+                                        <td class="fw-bold font-monospace">127.0.0.1:3306</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Connector:</td>
+                                        <td class="fw-bold font-monospace">PyMySQL / MySQL-Connector</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Primary Tables:</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">customers</span>
+                                            <span class="badge bg-light text-dark border">vehicles</span>
+                                            <span class="badge bg-light text-dark border">services</span>
+                                            <span class="badge bg-light text-dark border">payments</span>
+                                            <span class="badge bg-light text-dark border">users</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Live Status:</td>
+                                        <td><span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Connected & Operational</span></td>
+                                    </tr>
+                                </table>
+
+                                <div class="alert alert-light border small text-secondary">
+                                    <i class="fa-solid fa-circle-info text-orange me-1"></i>
+                                    All tables are connected with foreign keys and cascade rules. Any customer addition, vehicle link, service creation, or payment update persists directly into MySQL.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: ADMIN CUSTOMER (CREATE & EDIT)
+     ============================================================================== -->
+<div class="modal fade" id="adminCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminCustomerModalTitle"><i class="fa-solid fa-user-plus text-orange"></i> Add New Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="adminCustomerForm" onsubmit="submitAdminCustomer(event)">
+                <input type="hidden" id="cust_edit_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Customer Full Name *</label>
+                        <input type="text" id="cust_name" class="form-control" placeholder="e.g. Anand Mahindra" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Phone Number *</label>
+                            <input type="tel" id="cust_phone" class="form-control" placeholder="10-digit mobile" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Email Address *</label>
+                            <input type="email" id="cust_email" class="form-control" placeholder="name@domain.com" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Address</label>
+                        <textarea id="cust_address" class="form-control" rows="3" placeholder="Residential / Workshop pickup address"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-orange"><i class="fa-solid fa-floppy-disk me-1"></i> Save Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: ADMIN VEHICLE (CREATE & EDIT)
+     ============================================================================== -->
+<div class="modal fade" id="adminVehicleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminVehicleModalTitle"><i class="fa-solid fa-car text-orange"></i> Add New Vehicle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="adminVehicleForm" onsubmit="submitAdminVehicle(event)">
+                <input type="hidden" id="veh_edit_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Registered Owner (Customer) *</label>
+                        <select id="veh_owner_id" class="form-select" required>
+                            <option value="">-- Select Customer --</option>
+                            {% for c in customers %}
+                                <option value="{{ c.customer_id }}">{{ c.name }} ({{ c.phone }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Vehicle Registration Number *</label>
+                        <input type="text" id="veh_reg_number" class="form-control text-uppercase" placeholder="e.g. KA-01-AB-1234" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Vehicle Model *</label>
+                        <input type="text" id="veh_reg_model" class="form-control" placeholder="e.g. Toyota Innova HyCross" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Vehicle Type *</label>
+                        <select id="veh_reg_type" class="form-select" required>
+                            <option value="SUV">SUV</option>
+                            <option value="Sedan">Sedan</option>
+                            <option value="Hatchback">Hatchback</option>
+                            <option value="Electric SUV">Electric SUV / EV</option>
+                            <option value="Motorcycle">Motorcycle</option>
+                            <option value="Luxury">Luxury</option>
+                            <option value="Truck">Truck</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-orange"><i class="fa-solid fa-floppy-disk me-1"></i> Save Vehicle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: ADMIN SERVICE (CREATE & EDIT)
+     ============================================================================== -->
+<div class="modal fade" id="adminServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminServiceModalTitle"><i class="fa-solid fa-wrench text-orange"></i> Manage Service Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="adminServiceForm" onsubmit="submitAdminService(event)">
+                <input type="hidden" id="srv_edit_id">
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6" id="srv_vehicle_select_group">
+                            <label class="form-label small fw-bold">Target Vehicle *</label>
+                            <select id="adm_srv_vehicle_id" class="form-select" required>
+                                <option value="">-- Select Vehicle --</option>
+                                {% for v in vehicles %}
+                                    <option value="{{ v.vehicle_id }}">{{ v.vehicle_number }} — {{ v.vehicle_model }} ({{ v.customer_name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Service Type *</label>
+                            <select id="adm_srv_type" class="form-select" required>
+                                <option value="Periodic Maintenance & Oil Change">Periodic Maintenance & Oil Change</option>
+                                <option value="Brake System Overhaul">Brake System Overhaul</option>
+                                <option value="ECU Computer Diagnostics">ECU Computer Diagnostics</option>
+                                <option value="AC Cooling & Filter Service">AC Cooling & Filter Service</option>
+                                <option value="Battery & Electrical Diagnostics">Battery & Electrical Diagnostics</option>
+                                <option value="3D Wheel Alignment & Balancing">3D Wheel Alignment & Balancing</option>
+                                <option value="Suspension & Steering Checkup">Suspension & Steering Checkup</option>
+                                <option value="Complete Detailing & Wash">Complete Detailing & Wash</option>
+                                <option value="Major Engine Repair">Major Engine Repair</option>
+                                <option value="General Inspection & Repair">General Inspection & Repair</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Scheduled Service Date *</label>
+                            <input type="date" id="adm_srv_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Service Charge (₹) *</label>
+                            <input type="number" step="0.01" id="adm_srv_charge" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Service Status *</label>
+                            <select id="adm_srv_status" class="form-select" required>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Assign Mechanic</label>
+                        <select id="adm_srv_mechanic" class="form-select">
+                            <option value="">-- No Mechanic Assigned --</option>
+                            {% for m in mechanics %}
+                                <option value="{{ m.user_id }}">{{ m.full_name }} ({{ m.phone or m.username }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Customer Complaint / Service Description</label>
+                        <textarea id="adm_srv_desc" class="form-control" rows="2" placeholder="Customer description or service notes..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Technician Progress Notes</label>
+                        <textarea id="adm_srv_notes" class="form-control" rows="2" placeholder="Technician diagnosis, OEM parts replaced, test drive findings..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-orange"><i class="fa-solid fa-floppy-disk me-1"></i> Save Service Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: ADMIN PAYMENT (CREATE & EDIT)
+     ============================================================================== -->
+<div class="modal fade" id="adminPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminPaymentModalTitle"><i class="fa-solid fa-receipt text-orange"></i> Record / Edit Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="adminPaymentForm" onsubmit="submitAdminPayment(event)">
+                <input type="hidden" id="pay_edit_id">
+                <div class="modal-body">
+                    <div class="mb-3" id="pay_service_select_group">
+                        <label class="form-label small fw-bold">Associated Service *</label>
+                        <select id="adm_pay_service_id" class="form-select" required>
+                            <option value="">-- Select Service --</option>
+                            {% for s in services %}
+                                <option value="{{ s.service_id }}">Service #{{ s.service_id }} — {{ s.vehicle_number }} (₹{{ s.service_charge }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Amount (₹) *</label>
+                            <input type="number" step="0.01" id="adm_pay_amount" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Payment Date *</label>
+                            <input type="date" id="adm_pay_date" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Payment Method *</label>
+                            <select id="adm_pay_method" class="form-select" required>
+                                <option value="UPI / QR">UPI / QR</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Credit/Debit Card">Credit/Debit Card</option>
+                                <option value="Net Banking">Net Banking</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Payment Status *</label>
+                            <select id="adm_pay_status" class="form-select" required>
+                                <option value="Paid">Paid</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Transaction Reference ID</label>
+                        <input type="text" id="adm_pay_txid" class="form-control" placeholder="e.g. UPI-9847291048 or Bank Ref">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-orange"><i class="fa-solid fa-floppy-disk me-1"></i> Save Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}
+

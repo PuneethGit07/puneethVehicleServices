@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Mechanic Bay | Puneeth Vehicle Services{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-warning text-dark role-badge">Technician Bay</span>
+                    <h3 class="mb-0 fw-bold">Welcome, {{ current_user.full_name }}</h3>
+                </div>
+                <p class="text-secondary small mb-0">Assigned vehicle repair tasks, diagnosis logs, and service status updates.</p>
+            </div>
+            <div>
+                <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()">
+                    <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh Bay
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- KPI Metrics -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Total Assigned</span>
+                            <div class="stat-value">{{ total_assigned }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card warning">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">In Progress Now</span>
+                            <div class="stat-value">{{ in_progress_count }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-gear fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card info">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Ready for Work</span>
+                            <div class="stat-value">{{ approved_count }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-check"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card success">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="stat-title">Completed Jobs</span>
+                            <div class="stat-value">{{ completed_count }}</div>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assigned Services Table Card -->
+        <div class="content-card">
+            <div class="content-card-header">
+                <h5 class="mb-0 fw-bold text-navy"><i class="fa-solid fa-wrench text-orange me-2"></i>Assigned Vehicle Services</h5>
+                <div class="table-search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="mechanicSearch" class="form-control" placeholder="Search vehicle or client..." onkeyup="filterMechanicTable()">
+                </div>
+            </div>
+
+            <div class="content-card-body p-0">
+                {% if services %}
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover align-middle" id="mechanicTable">
+                            <thead>
+                                <tr>
+                                    <th>Service ID</th>
+                                    <th>Vehicle Details</th>
+                                    <th>Customer Info</th>
+                                    <th>Service Type & Complaint</th>
+                                    <th>Scheduled Date</th>
+                                    <th>Status</th>
+                                    <th>Technician Progress Notes</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in services %}
+                                    <tr>
+                                        <td class="fw-bold">#{{ s.service_id }}</td>
+                                        <td>
+                                            <span class="badge bg-dark fs-6">{{ s.vehicle_number }}</span>
+                                            <div class="small fw-semibold text-navy">{{ s.vehicle_model }}</div>
+                                            <small class="text-muted">{{ s.vehicle_type }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">{{ s.customer_name }}</div>
+                                            <div class="small text-muted"><i class="fa-solid fa-phone me-1"></i>{{ s.customer_phone }}</div>
+                                            <small class="text-secondary text-truncate d-block" style="max-width: 180px;">{{ s.customer_address }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-navy">{{ s.service_type }}</div>
+                                            <div class="small text-secondary bg-light p-2 rounded border mt-1" style="max-width: 250px;">
+                                                <i class="fa-solid fa-quote-left text-orange me-1 small"></i>{{ s.description or 'No customer complaint logged.' }}
+                                            </div>
+                                        </td>
+                                        <td>{{ s.service_date }}</td>
+                                        <td>
+                                            {% if s.status == 'Pending' %}
+                                                <span class="badge-status badge-pending">Pending</span>
+                                            {% elif s.status == 'Approved' %}
+                                                <span class="badge-status badge-approved">Approved</span>
+                                            {% elif s.status == 'In Progress' %}
+                                                <span class="badge-status badge-inprogress"><i class="fa-solid fa-gear fa-spin"></i> In Progress</span>
+                                            {% elif s.status == 'Completed' %}
+                                                <span class="badge-status badge-completed"><i class="fa-solid fa-circle-check"></i> Completed</span>
+                                            {% else %}
+                                                <span class="badge-status badge-cancelled">Cancelled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="small text-secondary" id="notes-display-{{ s.service_id }}">
+                                                {{ s.mechanic_notes or 'No progress logged yet.' }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-orange btn-update-bay" data-service="{{ s|tojson|forceescape }}">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Update Bay
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="text-muted fs-1 mb-3"><i class="fa-solid fa-toolbox"></i></div>
+                        <h5>No Vehicles Currently Assigned</h5>
+                        <p class="text-secondary small mb-0">Check back later or contact workshop admin for bay allocations.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: MECHANIC UPDATE PROGRESS & STATUS
+     ============================================================================== -->
+<div class="modal fade" id="updateProgressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-wrench text-orange"></i> Update Service Bay Progress</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="updateProgressForm" onsubmit="submitProgressUpdate(event)">
+                <input type="hidden" id="prog_service_id">
+                <div class="modal-body">
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold mb-0" id="prog_vehicle_number">KA-01-MJ-2024</h6>
+                            <span class="badge bg-navy" id="prog_id_badge">Service #1</span>
+                        </div>
+                        <div class="small text-secondary" id="prog_service_type">Periodic Maintenance</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Service Status *</label>
+                        <select id="prog_status" class="form-select" required>
+                            <option value="Approved">Approved (Awaiting Bay Entry)</option>
+                            <option value="In Progress">In Progress (Work Underway)</option>
+                            <option value="Completed">Completed (Quality Tested & Ready)</option>
+                            <option value="Pending">Pending Inspection</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Technician Findings & Work Performed *</label>
+                        <textarea id="prog_notes" class="form-control" rows="4" placeholder="Detail the parts inspected, fluids topped up, torque checks, road test findings..." required></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-success w-100" onclick="quickMarkCompleted()">
+                            <i class="fa-solid fa-circle-check me-1"></i> Quick Mark Completed
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-orange"><i class="fa-solid fa-floppy-disk me-1"></i> Save Updates</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/mechanic.js') }}"></script>
+{% endblock %}
+
